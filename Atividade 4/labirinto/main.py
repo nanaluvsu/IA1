@@ -1,3 +1,5 @@
+# RA: 24011150
+# RA: 24018492
 from pyamaze import maze, COLOR, agent
 
 if __name__ == "__main__":

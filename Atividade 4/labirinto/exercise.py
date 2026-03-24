@@ -1,35 +1,138 @@
 from pyamaze import maze, COLOR, agent
 
+def child_cell(currCell, direction):
+        if direction == "E":
+            return (currCell[0], currCell[1] + 1)
+        if direction == "W":
+            return (currCell[0], currCell[1] - 1)
+        if direction == "S":
+            return (currCell[0] + 1, currCell[1])
+        return (currCell[0] - 1, currCell[1])
 
-def bfs_path(my_maze, my_agent):
-    ini = (my_agent.x, my_agent.y)
-    explored = [ini]
-    fronteira = [ini]  
-    bfs_path = {}
-    while (len(fronteira) > 0):
-        
-    return "NNNN"
-
-def ids_path(my_maze, my_agent):
+def bfs_path(m, a):
     """
-    Exercício 2:
-    Implemente um algoritmo de busca de aprofundamento iterativo, 
-    que encontre o caminho que o agente deve percorrer para encontrar a 
-    saída do labirinto.
+    Implementação do algoritmo de busca em largura (BFS) para encontrar o
+    caminho de saída do labirinto.
 
-    Dicas:
-    - Use o atributo my_maze.maze_map para checar os movimentos possíveis.
-    - Use o atributo my_agent.position para saber a posição do agente.
-    - Verifique os formatos adequados para um caminho nesse post do
-    Towards Data Science, feito pelo autor do pacote:
-    https://towardsdatascience.com/a-python-module-for-maze-search-algorithms-64e7d1297c96
+    Args:
+        m (pyamaze.maze): labirinto.
+        a (pyamaze.agent): agente.
+
+    Returns:
+        forward_path (dict): caminho que leva o agente para fora do labirinto.
     """
-    # print(my_maze.maze_map)
-    # print(my_agent.position)
-    return "NNNN"
+    start = (a.x, a.y)
+    frontier = [start]  # fronteira
+    explored = [start]  # nós explorados
+    bfsPath = {}  # mapa para reconstrução do caminho
+
+    while len(frontier) > 0:
+        currCell = frontier.pop(0)
+
+        if currCell == m._goal:  # verifica objetivo
+            break
+
+        explored.append(currCell)
+
+        # Explora cada direção possível (ações)
+        for direction in "WNSE":
+            if m.maze_map[currCell][direction]:
+                if direction == "E":
+                    childCell = child_cell(currCell, direction)
+                elif direction == "W":
+                    childCell = child_cell(currCell, direction)
+                elif direction == "S":
+                    childCell = child_cell(currCell, direction)
+                else:
+                    childCell = child_cell(currCell, direction)
+
+                # se célula não foi explorada e não está na fronteira, adiciona. lógica do pseudocódigo visto em aula.
+                if childCell not in explored and childCell not in frontier:
+                    bfsPath[childCell] = currCell
+                    explored.append(childCell)
+                    frontier.append(childCell)
+    forward_path = {}
+    cell = m._goal  # destino
+    while cell != start:
+        # pega uma celula do caminho e coloca como chave no dict de caminho
+        forward_path[bfsPath[cell]] = (
+            cell  # o valor é a chave do caminho dfs
+        )
+        cell = bfsPath[
+            cell
+        ]  # operação termina assim que chegar no início, que é o destino.
+    return forward_path
+
+def ids_path(m, a):
+    """
+    Implementação do algoritmo de busca por aprofundamento iterativo (IDS)
+    para encontrar o caminho de saída do labirinto.
+
+    Args:
+        m (pyamaze.maze): labirinto.
+        a (pyamaze.agent): agente.
+
+    Returns:
+        forward_path (dict): caminho que leva o agente para fora do labirinto.
+    """
+    start = (a.x, a.y)
+    goal = m._goal
 
 
+    def dfs_com_limite(l):
+        frontier = [(start, 0)]  # fronteira: (célula, profundidade)
+        explored = [start]  # nós explorados nesta iteração
+        parent = {}  # mapa para reconstrução do caminho
 
+        while len(frontier) > 0:
+            currCell, depth = frontier.pop()
+
+            if currCell == goal:  # verifica objetivo
+                return parent, True
+
+            if depth == l:  # respeita o limite de profundidade atual
+                continue
+
+            # Explora cada direção possível (ações)
+            for direction in "WNSE":
+                if m.maze_map[currCell][direction]:
+                    if direction == "E":
+                        childCell = child_cell(currCell, direction)
+                    elif direction == "W":
+                        childCell = child_cell(currCell, direction)
+                    elif direction == "S":
+                        childCell = child_cell(currCell, direction)
+                    else:
+                        childCell = child_cell(currCell, direction)
+                    newDepth = depth + 1
+                    # se célula já foi explorada, continua...
+                    if childCell in explored:
+                        continue
+
+                    explored.append(childCell)
+                    parent[childCell] = currCell
+                    frontier.append((childCell, newDepth))
+
+        return parent, False
+
+    max_depth = len(m.grid)  # limite máximo para iterações de profundidade
+
+    # Incrementa o limite e executa DFS limitada até encontrar o objetivo
+    for limit in range(max_depth + 1):
+        idsPath, found = dfs_com_limite(limit)
+        if found:
+            forward_path = {}
+            cell = goal
+            while cell != start:
+                # reconstrói o caminho do objetivo até o estado inicial
+                forward_path[idsPath[cell]] = cell
+                cell = idsPath[cell]
+            return forward_path
+
+    return
+
+
+# preservando código original de dfs. sem implementação da função child_cell.
 def dfs_path(m, a):
     """
     Implementação do algoritmo de busca por profundidade para encontrar o caminho
@@ -89,7 +192,9 @@ if __name__ == "__main__":
     # cria agente
     my_agent = agent(my_maze, 3, 3, shape="arrow", filled=True, footprints=True)
     # calcula passos que o agente seguirá para sair do labirinto
-    my_path = dfs_path(my_maze, my_agent)
+    #my_path = bfs_path(my_maze, my_agent)
+    #my_path = dfs_path(my_maze, my_agent)
+    my_path = ids_path(my_maze, my_agent)
     # executa os passos calculados
     my_maze.tracePath({my_agent: my_path}, delay=100, kill=False)
     # roda a animação mostrando o movimento do agente

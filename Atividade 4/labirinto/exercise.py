@@ -1,5 +1,66 @@
 from pyamaze import maze, COLOR, agent
 
+#TODO: alterar nomes de variáveis para snake_case
+
+def h(a,b): #definição da função heurística
+    #calcula distância usando a Geometria/Distância de Manhattan
+    cost = abs(a.x - b.x) + abs(a.x - b.x)
+    return cost
+
+def greedy_path(m, a): #busca gulosa: utiliza a heurística.
+    start = (a.x, a.y)
+    frontier = [[start, h(start,start)]]
+    explored = [start]
+    greedy_path = {}
+    cell = m._goal  # destino
+    
+    while len(frontier) > 0:
+        currCell = frontier.pop(0)
+
+        if currCell == m._goal:  # verifica objetivo
+            break
+        
+        explored.append(currCell)
+
+        #checa custo para cada casa no labirinto
+        
+        
+        '''
+                if direction == "E":
+                    childCell = (currCell[0], currCell[1] + 1)
+                elif direction == "W":
+                    childCell = (currCell[0], currCell[1] - 1)
+                elif direction == "S":
+                    childCell = (currCell[0] + 1, currCell[1])
+                elif direction == "N":
+                    childCell = (currCell[0] - 1, currCell[1])
+        '''
+        for direction in "WNSE":
+                if m.maze_map[currCell][direction]:
+                    if direction == "E":
+                        childCell = (currCell[0], currCell[1] + 1)                       
+                    elif direction == "W":
+                        childCell = (currCell[0], currCell[1] - 1)
+                    elif direction == "S":
+                        childCell = (currCell[0] + 1, currCell[1])
+                    elif direction == "N":
+                        childCell = (currCell[0] - 1, currCell[1])
+                    # se celula já foi explorada, continua... 
+                    if childCell in explored:
+                        continue  # Do nothing
+                    # Adiciona celula a fronteira e aos nós explorados
+                    greedy_path[childCell]
+                    explored.append(childCell)
+                    frontier.append([childCell, h(start,childCell)])
+    forward_path = {}
+    
+                    
+
+def astar_path(m, a):
+    '''
+        to implement
+    '''
+
 def child_cell(currCell, direction):
         if direction == "E":
             return (currCell[0], currCell[1] + 1)
@@ -131,10 +192,9 @@ def ids_path(m, a):
 
     return
 
-
-# preservando código original de dfs. sem implementação da função child_cell.
 def dfs_path(m, a):
-    """
+    # preservando código original de dfs. sem implementação da função child_cell.
+    '''
     Implementação do algoritmo de busca por profundidade para encontrar o caminho
     de saída do labirinto.
 
@@ -144,7 +204,7 @@ def dfs_path(m, a):
 
     Returns:
         forward_path (dict): caminho que leva o agente para fora do labirinto. 
-    """
+    '''
     start = (a.x, a.y)  # celula do estado inicial
     explored = [start]  # List para nós explorados 
     frontier = [start]  # List para a fronteira

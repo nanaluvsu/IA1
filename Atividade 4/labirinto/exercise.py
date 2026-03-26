@@ -8,6 +8,13 @@ def h(a,b): #definição da função heurística
     return cost
 
 def greedy_path(m, a): #busca gulosa: utiliza a heurística.
+    '''
+        a intenção aqui é fazer com que, 
+        antes dos movimentos do agente pelo labirinto, 
+        ele analise o custo 
+        (distancia entre cada casa do labirinto e o estado objetivo, ou seja, o cell) 
+        e escolha o caminho que tem o menor custo.
+    '''
     start = (a.x, a.y)
     frontier = [[start, h(start,start)]]
     explored = [start]

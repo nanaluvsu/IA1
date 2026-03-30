@@ -4,69 +4,139 @@ from pyamaze import maze, COLOR, agent
 
 def h(a,b): #definição da função heurística
     #calcula distância usando a Geometria/Distância de Manhattan
-    cost = abs(a.x - b.x) + abs(a.x - b.x)
+    cost = abs(a[0] - b[0]) + abs(a[1] - b[1])
     return cost
 
-def greedy_path(m, a): #busca gulosa: utiliza a heurística.
+def greedy_path(m, a):
     '''
-        a intenção aqui é fazer com que, 
-        antes dos movimentos do agente pelo labirinto, 
-        ele analise o custo 
-        (distancia entre cada casa do labirinto e o estado objetivo, ou seja, o cell) 
-        e escolha o caminho que tem o menor custo.
+    Implementação da busca gulosa (Greedy Best-First Search).
+    Expande o nó com menor heurística h(n) até o objetivo.
+    
+    Args:
+        m (pyamaze.maze): labirinto.
+        a (pyamaze.agent): agente.
+    
+    Returns:
+        forward_path (dict): caminho que leva o agente para fora do labirinto.
     '''
     start = (a.x, a.y)
-    frontier = [[start, h(start,start)]]
-    explored = [start]
-    greedy_path = {}
-    cell = m._goal  # destino
+    goal = m._goal
+    
+    # Fronteira: lista de (h_value, cell)
+    frontier = [(h(start, goal), start)]
+    frontier_cells = [start]  # para checar presença rapidamente
+    explored = []  # estados já expandidos
+    parent = {}  # para reconstrução do caminho
     
     while len(frontier) > 0:
-        currCell = frontier.pop(0)
-
-        if currCell == m._goal:  # verifica objetivo
-            break
+        # Encontra o índice do nó com menor h
+        min_index = 0
+        for i in range(1, len(frontier)):
+            if frontier[i][0] < frontier[min_index][0]:
+                min_index = i
         
-        explored.append(currCell)
-
-        #checa custo para cada casa no labirinto
+        # Remove o nó com menor h da fronteira
+        _, curr_cell = frontier.pop(min_index)
+        frontier_cells.remove(curr_cell)
         
+        # Verifica se chegou ao objetivo
+        if curr_cell == goal:
+            forward_path = {}
+            cell = goal
+            while cell != start:
+                forward_path[parent[cell]] = cell
+                cell = parent[cell]
+            return forward_path
         
-        '''
-                if direction == "E":
-                    childCell = (currCell[0], currCell[1] + 1)
-                elif direction == "W":
-                    childCell = (currCell[0], currCell[1] - 1)
-                elif direction == "S":
-                    childCell = (currCell[0] + 1, currCell[1])
-                elif direction == "N":
-                    childCell = (currCell[0] - 1, currCell[1])
-        '''
+        # Marca como explorado
+        explored.append(curr_cell)
+        
+        # Expande vizinhos
         for direction in "WNSE":
-                if m.maze_map[currCell][direction]:
-                    if direction == "E":
-                        childCell = (currCell[0], currCell[1] + 1)                       
-                    elif direction == "W":
-                        childCell = (currCell[0], currCell[1] - 1)
-                    elif direction == "S":
-                        childCell = (currCell[0] + 1, currCell[1])
-                    elif direction == "N":
-                        childCell = (currCell[0] - 1, currCell[1])
-                    # se celula já foi explorada, continua... 
-                    if childCell in explored:
-                        continue  # Do nothing
-                    # Adiciona celula a fronteira e aos nós explorados
-                    greedy_path[childCell]
-                    explored.append(childCell)
-                    frontier.append([childCell, h(start,childCell)])
-    forward_path = {}
+            if m.maze_map[curr_cell][direction]:
+                child = child_cell(curr_cell, direction)
+                
+                # Adiciona se não foi explorado e não está na fronteira
+                if child not in explored and child not in frontier_cells:
+                    parent[child] = curr_cell
+                    frontier.append((h(child, goal), child))
+                    frontier_cells.append(child)
+    
+    return {}
     
                     
 
 def astar_path(m, a):
     '''
-        to implement
+    Implementação do A* (A Star).
+    Expande o nó com menor f(n) = g(n) + h(n) até o objetivo.
+    
+    Args:
+        m (pyamaze.maze): labirinto.
+        a (pyamaze.agent): agente.
+    
+    Returns:
+        forward_path (dict): caminho que leva o agente para fora do labirinto.
     '''
+    start = (a.x, a.y)
+    goal = m._goal
+    
+    # Fronteira: lista de (f_value, cell)
+    # f(n) = g(n) + h(n)
+    frontier = [(h(start, goal), start)]  # g=0, h=h(start,goal)
+    frontier_cells = [start]
+    explored = []
+    parent = {}
+    g_cost = {start: 0}  # custo do caminho até cada nó
+    
+    while len(frontier) > 0:
+        # Encontra o índice do nó com menor f
+        min_index = 0
+        for i in range(1, len(frontier)):
+            if frontier[i][0] < frontier[min_index][0]:
+                min_index = i
+        
+        # Remove o nó com menor f da fronteira
+        _, curr_cell = frontier.pop(min_index)
+        frontier_cells.remove(curr_cell)
+        
+        # Verifica se chegou ao objetivo
+        if curr_cell == goal:
+            forward_path = {}
+            cell = goal
+            while cell != start:
+                forward_path[parent[cell]] = cell
+                cell = parent[cell]
+            return forward_path
+        
+        # Marca como explorado
+        explored.append(curr_cell)
+        
+        # Expande vizinhos
+        for direction in "WNSE":
+            if m.maze_map[curr_cell][direction]:
+                child = child_cell(curr_cell, direction)
+                new_g = g_cost[curr_cell] + 1  # cada passo custa 1
+                
+                # Se ainda não foi explorado
+                if child not in explored:
+                    # Se não está na fronteira ou encontrou caminho melhor
+                    if child not in frontier_cells or new_g < g_cost.get(child, float('inf')):
+                        parent[child] = curr_cell
+                        g_cost[child] = new_g
+                        f_value = new_g + h(child, goal)  # f = g + h
+                        
+                        if child not in frontier_cells:
+                            frontier.append((f_value, child))
+                            frontier_cells.append(child)
+                        else:
+                            # Atualiza valor de f se encontrou caminho melhor
+                            for i in range(len(frontier)):
+                                if frontier[i][1] == child:
+                                    frontier[i] = (f_value, child)
+                                    break
+    
+    return {}
 
 def child_cell(currCell, direction):
         if direction == "E":
@@ -78,7 +148,7 @@ def child_cell(currCell, direction):
         return (currCell[0] - 1, currCell[1])
 
 def bfs_path(m, a):
-    """
+    '''
     Implementação do algoritmo de busca em largura (BFS) para encontrar o
     caminho de saída do labirinto.
 
@@ -88,7 +158,7 @@ def bfs_path(m, a):
 
     Returns:
         forward_path (dict): caminho que leva o agente para fora do labirinto.
-    """
+    '''
     start = (a.x, a.y)
     frontier = [start]  # fronteira
     explored = [start]  # nós explorados
